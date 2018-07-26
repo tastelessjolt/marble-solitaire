@@ -1,0 +1,9 @@
+#ifndef MARBLES_CONFIG_H
+
+int WINDOW_SIZE_W = 1024;
+int WINDOW_SIZE_H = 786;
+
+int BOARD_SIZE_W = 700;
+int BOARD_SIZE_H = 700;
+
+#endif // MARBLES_CONFIG_H
