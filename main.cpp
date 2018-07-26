@@ -32,12 +32,161 @@ Fl_Shared_Image *open_resize_to(const char *filename, int w, int h)
     return img;
 }
 
+class Marble;
+class Board;
+
+class Marble : public Fl_Button
+{
+    Board *parent;
+
+  public:
+    int lbl;
+    int xpos, ypos;
+    Marble(Board *b, int xp, int yp, int x, int y, int pw, int ph);
+    int handle(int);
+};
+
+class Board : Fl_Box
+{
+    bool board_structure[7][7] = {
+        {0, 0, 1, 1, 1, 0, 0},
+        {0, 1, 1, 1, 1, 1, 0},
+        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 1, 1, 1, 1},
+        {0, 1, 1, 1, 1, 1, 0},
+        {0, 0, 1, 1, 1, 0, 0},
+    };
+    Marble *marbles[7][7];
+
+  protected:
+    void swap(int x1, int y1, int x2, int y2);
+    bool win();
+
+  public:
+    int size;
+    int n_steps;
+    Board(int, int, int, int);
+    int move(int, int, int);
+    void randomize();
+    void reset();
+    ~Board();
+};
+
+Marble::Marble(Board *b, int xp, int yp, int x, int y, int pw, int ph) : 
+    Fl_Button(x, y, pw, ph, "I'm a Margble")
+{
+
+    parent = b;
+    xpos = xp;
+    ypos = yp;
+}
+
+int Marble::handle(int event)
+{
+    if (event == FL_PUSH)
+    {
+        parent->move(xpos, ypos, lbl);
+    }
+    return 1;
+};
+
+Board::Board(int x0, int y0, int pw, int ph) :
+    Fl_Box(x0, y0, pw, ph)
+{
+    image(open_resize_to(background, BOARD_SIZE_W, BOARD_SIZE_H));
+
+    n_steps = 0;
+    for (int i = 0; i < 7; i++) {
+        for (int j = 0; j < 7; j++) {
+            if (board_structure[i][j]) {
+                marbles[i][j] = new Marble(this, i, j, x0 + pw/2, y0 + ph/2, 20, 20);
+            }
+            else {
+                marbles[i][j] = NULL;
+            }
+        }
+    }
+}
+
+void Board::reset()
+{
+    int temp;
+    n_steps = 0;
+    for (int i = 0; i < 7; i++)
+    {
+        for (int j = 0; j < 7; j++)
+        {   
+
+        }
+    }
+}
+
+Board::~Board()
+{
+    // do clean up
+}
+
+void Board::swap(int x1, int y1, int x2, int y2)
+{
+
+}
+
+int Board::move(int x, int y, int mylabl)
+{
+    /*
+    // Get possible direction of movement
+    Direction dir = getDirection(x, y);
+    if (dir == INVALID)
+    {
+        cout << "Invalid move" << endl;
+        return 1;
+    }
+    else
+    {
+        const char *arr[] = {"RIGHT", "UP", "LEFT", "DOWN"};
+        cout << arr[(int)dir] << endl;
+    }
+
+    int arr_x[] = {+1, 0, -1, 0};
+    int arr_y[] = {0, -1, 0, +1};
+    Direction arr_dirs[] = {RIGHT, UP, LEFT, DOWN};
+
+    // swap marbles
+    swap(x, y, x + arr_x[dir], y + arr_y[dir]);
+    n_steps++;
+
+    if (win())
+    {
+        fl_message("You did well, you finished in %d steps", n_steps);
+        cout << "You finished in " << n_steps << " steps" << endl;
+        n_steps = 0;
+    }
+    */
+    return 0;
+}
+
+// check if board is in solved state
+bool Board::win()
+{
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            if (marbles[i][j]->lbl != i + j * size + 1)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 int main(int argc, char *argv[])
 {
     Fl_Window *w = new Fl_Window(WINDOW_SIZE_W, WINDOW_SIZE_H);
 
-    Fl_Box box((WINDOW_SIZE_W - BOARD_SIZE_W)/2, (WINDOW_SIZE_H - BOARD_SIZE_H)/2, BOARD_SIZE_W, BOARD_SIZE_H);
-    box.image(open_resize_to(background, BOARD_SIZE_W, BOARD_SIZE_H));
+    Board board((WINDOW_SIZE_W - BOARD_SIZE_W)/2, (WINDOW_SIZE_H - BOARD_SIZE_H)/2, BOARD_SIZE_W, BOARD_SIZE_H);
 
     w->end();
     w->show(argc, argv);
