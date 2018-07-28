@@ -14,7 +14,7 @@ fltk-config --use-images --compile main.cpp
 * Figure out the distance between holes
 * Put button at every holes
 * Decision
-  * Two clicks
+  * Two clicks [y]
   * Drag
 * Then code up the actual working of the game
 * And so on ...

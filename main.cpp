@@ -10,6 +10,8 @@
 #include "config.h"
 #include "strings.h"
 
+#include <vector>
+
 using namespace std;
 
 Fl_Shared_Image *open_resize_to(const char *filename, int w, int h)
@@ -59,6 +61,7 @@ class Board : Fl_Box
         {0, 0, 1, 1, 1, 0, 0},
     };
     Marble *marbles[7][7];
+    vector<Marble*> highlighted;
 
   protected:
     void swap(int x1, int y1, int x2, int y2);
@@ -69,7 +72,7 @@ class Board : Fl_Box
     int n_steps;
     bool highlight;
     Board(int, int, int, int);
-    int move(int, int, int);
+    int move(int, int);
     void randomize();
     void reset();
     ~Board();
@@ -88,7 +91,7 @@ int Marble::handle(int event)
 {
     if (event == FL_PUSH)
     {
-        parent->move(xpos, ypos, lbl);
+        parent->move(xpos, ypos);
     }
     return 1;
 };
@@ -134,8 +137,25 @@ void Board::swap(int x1, int y1, int x2, int y2)
 
 }
 
-int Board::move(int x, int y, int mylabl)
+int Board::move(int x, int y)
 {
+    // First click
+    if (highlighted.empty() ) {
+
+    }
+
+    // Second Click
+    else {
+        for (Marble *mar: highlighted) {
+            if (mar->xpos == x && mar->ypos == y) {
+                if (mar->highlight) {
+                    mar->show();
+                    mar->highlight = false;
+                }
+            } 
+        }
+    }
+
     /*
     // Get possible direction of movement
     Direction dir = getDirection(x, y);
