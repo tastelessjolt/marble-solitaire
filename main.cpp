@@ -35,14 +35,15 @@ Fl_Shared_Image *open_resize_to(const char *filename, int w, int h)
 class Marble;
 class Board;
 
-class Marble : public Fl_Button
+class Marble : public Fl_Box
 {
     Board *parent;
 
   public:
     int lbl;
+    bool highlight;
     int xpos, ypos;
-    Marble(Board *b, int xp, int yp, int x, int y, int pw, int ph);
+    Marble(Board *b, int xp, int yp, int x, int y);
     int handle(int);
 };
 
@@ -52,7 +53,7 @@ class Board : Fl_Box
         {0, 0, 1, 1, 1, 0, 0},
         {0, 1, 1, 1, 1, 1, 0},
         {1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 0, 1, 1, 1},
         {1, 1, 1, 1, 1, 1, 1},
         {0, 1, 1, 1, 1, 1, 0},
         {0, 0, 1, 1, 1, 0, 0},
@@ -66,6 +67,7 @@ class Board : Fl_Box
   public:
     int size;
     int n_steps;
+    bool highlight;
     Board(int, int, int, int);
     int move(int, int, int);
     void randomize();
@@ -73,10 +75,10 @@ class Board : Fl_Box
     ~Board();
 };
 
-Marble::Marble(Board *b, int xp, int yp, int x, int y, int pw, int ph) : 
-    Fl_Button(x, y, pw, ph, "I'm a Margble")
+Marble::Marble(Board *b, int xp, int yp, int x, int y) : 
+    Fl_Box(x, y, MARBLE_SIZE_W, MARBLE_SIZE_H)
 {
-
+    image(open_resize_to(marble, MARBLE_SIZE_W, MARBLE_SIZE_H));
     parent = b;
     xpos = xp;
     ypos = yp;
@@ -100,7 +102,7 @@ Board::Board(int x0, int y0, int pw, int ph) :
     for (int i = 0; i < 7; i++) {
         for (int j = 0; j < 7; j++) {
             if (board_structure[i][j]) {
-                marbles[i][j] = new Marble(this, i, j, x0 + pw/2, y0 + ph/2, 20, 20);
+                marbles[i][j] = new Marble(this, i, j, x0 + OFFSET_W + i * DISTANCE_BETWEEN_HOLECENTERS_W, y0 + OFFSET_H + j * DISTANCE_BETWEEN_HOLECENTERS_H);
             }
             else {
                 marbles[i][j] = NULL;
