@@ -20,6 +20,7 @@ Fl_Image *marble_;
 Fl_Image *marble_sel_;
 Fl_Image *background_;
 
+// Opens an image and resizes to the specified dimentions
 Fl_Shared_Image *open_resize_to(const char *filename, int w, int h)
 {
     Fl_Shared_Image *img = Fl_Shared_Image::get(new Fl_PNG_Image(filename));
@@ -72,8 +73,12 @@ class Board : Fl_Box
         {0, 0, 1, 1, 1, 0, 0},
     };
     Marble *marbles[7][7];
-    vector<Marble*> highlighted;
+    
+    // Selected marble
     Marble *last_marble;
+    
+    // Possible moves for the current marble
+    vector<Marble*> highlighted;
 
   protected:
     void swap(int x1, int y1, int x2, int y2);
@@ -85,7 +90,6 @@ class Board : Fl_Box
     int n_steps;
     Board(int, int, int, int);
     int move(int, int);
-    void randomize();
     void reset();
     ~Board();
 };
@@ -101,6 +105,7 @@ Marble::Marble(Board *b, int xp, int yp, int x, int y) :
     ypos = yp;
 }
 
+// Shows the Marble Image
 void Marble::show_img()
 {
     image(marble_);
@@ -108,6 +113,7 @@ void Marble::show_img()
     hidden = false;
 }
 
+// Shows the Marble Hole Image
 void Marble::hide_img()
 {
     image(blank_);
@@ -124,11 +130,13 @@ int Marble::handle(int event)
     return 1;
 };
 
+// Shows the Selected Marble Hole Image
 void Marble::select() {
     image(marble_sel_);
     redraw();
 }
 
+// Shows the Marble Hole Image
 void Marble::unselect() {
     image (blank_);
     redraw();
@@ -137,6 +145,7 @@ void Marble::unselect() {
 
 Board::Board(int x0, int y0, int pw, int ph) : Fl_Box(x0, y0, pw, ph)
 {
+    // Board Image load
     image(background_);
 
     n_steps = 0;
@@ -153,6 +162,7 @@ Board::Board(int x0, int y0, int pw, int ph) : Fl_Box(x0, y0, pw, ph)
     marbles[3][3]->hide_img();
 }
 
+// Resets board to initial position
 void Board::reset()
 {
     n_steps = 0;
@@ -167,6 +177,7 @@ void Board::reset()
         }
     }
     marbles[3][3]->hide_img();
+    highlighted.clear();
 }
 
 Board::~Board()
@@ -174,6 +185,7 @@ Board::~Board()
     // do clean up
 }
 
+// helper function
 bool in_between (int a, int i, int j) {
     return a >= i && a < j;
 }
@@ -185,6 +197,7 @@ int Board::move(int x, int y)
     int arr_y[] = {0, -2, 0, 2};
 
     // First click
+    // Stores the possible next positions
     if ( highlighted.empty() ) {
         if (marbles[x][y]->hidden) {
             return 0;
@@ -209,6 +222,7 @@ int Board::move(int x, int y)
     }
 
     // Second Click
+    // Checks if the possible position is clicked
     else {
         for (Marble *mar: highlighted) {
             if (mar->xpos == x && mar->ypos == y) {
@@ -234,7 +248,7 @@ int Board::move(int x, int y)
             fl_message("Congrats! You finished it!");
         }
         else if (stat < 0 /* lose */) {
-            fl_message("Sorry, you're out of moves :(");
+            fl_message("Sorry, you're out of moves :(. Try again. Fighting! :)");
             reset();
         }
     }
@@ -242,6 +256,7 @@ int Board::move(int x, int y)
     return 0;
 }
 
+// helper function for calcutating number of adjacent pairs
 int Board::num_neighbours (int x, int y) {
     int arr_x[] = {1, 0, -1, 0};
     int arr_y[] = {0, -1, 0, 1};
@@ -288,6 +303,7 @@ int Board::check_status()
     return 0;
 }
 
+// preload all images used
 void load_images () {
     blank_ = open_resize_to(blank, MARBLE_SIZE_W, MARBLE_SIZE_H);
     marble_ = open_resize_to(marble, MARBLE_SIZE_W, MARBLE_SIZE_H);
