@@ -1,9 +1,12 @@
 #include <iostream>
 
+#include <Eigen/Dense>
+
 #include "config.h"
 #include "strings.h"
 #include "main.h"
 #include "fltk.h"
+#include "nanogui.h"
 
 #include <vector>
 
@@ -240,7 +243,8 @@ void load_images () {
 
 int main(int argc, char *argv[])
 {
-    creator = new FlTk_Creator();
+    // creator = new FlTk_Creator();
+    creator = new NanoGUI_Creator();
     load_images();
 
     Window *w = creator->makeWindow(WINDOW_SIZE_W, WINDOW_SIZE_H);
