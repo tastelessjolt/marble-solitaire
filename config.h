@@ -1,4 +1,5 @@
 #ifndef MARBLES_CONFIG_H
+#define MARBLES_CONFIG_H
 
 int WINDOW_SIZE_W = 1024;
 int WINDOW_SIZE_H = 786;

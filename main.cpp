@@ -1,104 +1,28 @@
 #include <iostream>
 
-#include <FL/Fl.H>
-#include <FL/Fl_Window.H>
-#include <FL/fl_ask.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_PNG_Image.H>
-#include <FL/Fl_Shared_Image.H>
-
 #include "config.h"
 #include "strings.h"
+#include "main.h"
+#include "fltk.h"
 
 #include <vector>
 
 using namespace std;
 
-Fl_Image *blank_;
-Fl_Image *marble_;
-Fl_Image *marble_sel_;
-Fl_Image *background_;
+Creator *creator;
 
-// Opens an image and resizes to the specified dimentions
-Fl_Shared_Image *open_resize_to(const char *filename, int w, int h)
+Image *blank_;
+Image *marble_;
+Image *marble_sel_;
+Image *background_;
+
+
+Marble::Marble(Board *b, int xp, int yp, int x, int y)
 {
-    Fl_Shared_Image *img = Fl_Shared_Image::get(new Fl_PNG_Image(filename));
-    Fl_Image *temp;
-    if (img->w() > w || img->h() > h)
-    {
-        if (img->w() > img->h())
-        {
-            temp = img->copy(w, h * img->h() / img->w());
-        }
-        else
-        {
-            temp = img->copy(w * img->w() / img->h(), h);
-        }
-        img->release();
-        img = (Fl_Shared_Image *)temp;
-    }
-    return img;
-}
-
-class Marble;
-class Board;
-
-class Marble : public Fl_Box
-{
-    Board *parent;
-    Fl_Image *img;
-
-  public:
-    bool highlight;
-    bool hidden;
-    int xpos, ypos;
-    Marble(Board *b, int xp, int yp, int x, int y);
-    void select();
-    void unselect();
-    int handle(int);
-    void show_img();
-    void hide_img();
-};
-
-class Board : Fl_Box
-{
-    bool board_structure[7][7] = {
-        {0, 0, 1, 1, 1, 0, 0},
-        {0, 1, 1, 1, 1, 1, 0},
-        {1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1},
-        {1, 1, 1, 1, 1, 1, 1},
-        {0, 1, 1, 1, 1, 1, 0},
-        {0, 0, 1, 1, 1, 0, 0},
-    };
-    Marble *marbles[7][7];
-    
-    // Selected marble
-    Marble *last_marble;
-    
-    // Possible moves for the current marble
-    vector<Marble*> highlighted;
-
-  protected:
-    void swap(int x1, int y1, int x2, int y2);
-    int check_status();
-    int num_neighbours (int x, int y);
-
-  public:
-    int size;
-    int n_steps;
-    Board(int, int, int, int);
-    int move(int, int);
-    void reset();
-    ~Board();
-};
-
-Marble::Marble(Board *b, int xp, int yp, int x, int y) : 
-    Fl_Box(x, y, MARBLE_SIZE_W, MARBLE_SIZE_H)
-{
-    image(marble_);
-    align(FL_ALIGN_INSIDE);
+    imgView = creator->makeImageView(x, y, MARBLE_SIZE_W, MARBLE_SIZE_H);
+    imgView->setHandler((Handler*)this);
+    imgView->image(marble_);
+    // align(FL_ALIGN_INSIDE);
     hidden = false;
     parent = b;
     xpos = xp;
@@ -108,16 +32,16 @@ Marble::Marble(Board *b, int xp, int yp, int x, int y) :
 // Shows the Marble Image
 void Marble::show_img()
 {
-    image(marble_);
-    redraw();
+    imgView->image(marble_);
+    imgView->redraw();
     hidden = false;
 }
 
 // Shows the Marble Hole Image
 void Marble::hide_img()
 {
-    image(blank_);
-    redraw();
+    imgView->image(blank_);
+    imgView->redraw();
     hidden = true;
 }
 
@@ -132,21 +56,23 @@ int Marble::handle(int event)
 
 // Shows the Selected Marble Hole Image
 void Marble::select() {
-    image(marble_sel_);
-    redraw();
+    imgView->image(marble_sel_);
+    imgView->redraw();
 }
 
 // Shows the Marble Hole Image
 void Marble::unselect() {
-    image (blank_);
-    redraw();
+    imgView->image (blank_);
+    imgView->redraw();
     hidden = true;
 }
 
-Board::Board(int x0, int y0, int pw, int ph) : Fl_Box(x0, y0, pw, ph)
+Board::Board(Window *w, int x0, int y0, int pw, int ph)
 {
     // Board Image load
-    image(background_);
+    this->w = w;
+    imgView = creator->makeImageView(x0, y0, pw, ph);
+    imgView->image(background_);
 
     n_steps = 0;
     for (int i = 0; i < 7; i++) {
@@ -245,10 +171,11 @@ int Board::move(int x, int y)
 
         int stat = check_status();
         if (stat > 0 /* win */) {
-            fl_message("Congrats! You finished it!");
+            w->showMessage("Congrats! You finished it!");
+            reset();
         }
         else if (stat < 0 /* lose */) {
-            fl_message("Sorry, you're out of moves :(. Try again. Fighting! :)");
+            w->showMessage("Sorry, you're out of moves :(. Try again. Fighting! :)");
             reset();
         }
     }
@@ -305,22 +232,25 @@ int Board::check_status()
 
 // preload all images used
 void load_images () {
-    blank_ = open_resize_to(blank, MARBLE_SIZE_W, MARBLE_SIZE_H);
-    marble_ = open_resize_to(marble, MARBLE_SIZE_W, MARBLE_SIZE_H);
-    marble_sel_ = open_resize_to(marble_selected, MARBLE_SIZE_W, MARBLE_SIZE_H);
-    background_ = open_resize_to(background, BOARD_SIZE_W, BOARD_SIZE_H);
+    blank_ = creator->makeImage(blank, MARBLE_SIZE_W, MARBLE_SIZE_H);
+    marble_ = creator->makeImage(marble, MARBLE_SIZE_W, MARBLE_SIZE_H);
+    marble_sel_ = creator->makeImage(marble_selected, MARBLE_SIZE_W, MARBLE_SIZE_H);
+    background_ = creator->makeImage(background, BOARD_SIZE_W, BOARD_SIZE_H);
 }
 
 int main(int argc, char *argv[])
 {
+    creator = new FlTk_Creator();
     load_images();
 
-    Fl_Window *w = new Fl_Window(WINDOW_SIZE_W, WINDOW_SIZE_H);
+    Window *w = creator->makeWindow(WINDOW_SIZE_W, WINDOW_SIZE_H);
     w->label("Marble Solitaire");
 
-    Board board((WINDOW_SIZE_W - BOARD_SIZE_W)/2, (WINDOW_SIZE_H - BOARD_SIZE_H)/2, BOARD_SIZE_W, BOARD_SIZE_H);
+    Board *board = new Board(w, (WINDOW_SIZE_W - BOARD_SIZE_W)/2, (WINDOW_SIZE_H - BOARD_SIZE_H)/2, BOARD_SIZE_W, BOARD_SIZE_H);
 
     w->end();
     w->show(argc, argv);
-    return Fl::run();
+
+    MainLoop *mainloop  = creator->makeMainLoop();
+    return mainloop->run();
 }
